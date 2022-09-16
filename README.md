@@ -35,7 +35,7 @@ $ php artisan key:generate
 ## Database
 We have made a database migration for the locations dataset that we are going to use. You can add them to the database by running:
 ```shell
-$ php artisan migrate
+$ php artisan migrate --seed
 ```
 
 ## Running the app locally
