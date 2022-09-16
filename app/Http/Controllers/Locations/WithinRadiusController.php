@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Locations;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Locations\WithinRadiusRequest;
+use App\Models\Location;
 use Illuminate\Http\JsonResponse;
 
 /**
@@ -22,6 +23,15 @@ class WithinRadiusController extends Controller
      */
     public function __invoke(WithinRadiusRequest $request): JsonResponse
     {
-        return new JsonResponse(['data' => []]);
+        $latitude = $request->input('lat');
+        $longitude = $request->input('long');
+        $radius = $request->input('rad');
+
+        return new JsonResponse([
+            'data' => Location::within($radius)
+                ->kilometersOf($latitude, $longitude)
+                ->closestFirst()
+                ->get(),
+        ]);
     }
 }

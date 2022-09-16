@@ -2,12 +2,16 @@
 
 namespace Tests\Feature\app\Http\Controllers\Locations;
 
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Arr;
 use Tests\TestCase;
 use function range;
 use function route;
 
 class WithinRadiusControllerTest extends TestCase
 {
+    use RefreshDatabase;
+
     /**
      * Verifies that a 422 error is returned when the `rad` query string parameter
      * is missing.
@@ -123,6 +127,75 @@ class WithinRadiusControllerTest extends TestCase
     }
 
     /**
+     * Given a valid latitude, longitude, and radius, the expected location names
+     * will be returned assuming that the data in the database is equivalent to our
+     * seeder {@see \Database\Seeders\LocationSeeder::$data data}.
+     *
+     * @param float $latitude
+     * @param float $longitude
+     * @param float $radius
+     * @param array $expectedLocations
+     *
+     * @return void
+     *
+     * @dataProvider validParamsAndExpectedResults
+     */
+    public function testWhenData_isValid_shouldCalculateCorrectly(
+        float $latitude,
+        float $longitude,
+        float $radius,
+        array $expectedLocations
+    ) {
+        $this->seed();
+        $route = $this->route([
+            'lat' => $latitude,
+            'long' => $longitude,
+            'rad' => $radius,
+        ]);
+
+        $request = $this->getJson($route);
+
+        $this->assertEquals(
+            $expectedLocations,
+            Arr::pluck($request->json('data'), 'name')
+        );
+    }
+
+    /**
+     * Verifies that the locations are returned ordered by their distance from the
+     * source, in ascending order.
+     *
+     * @return void
+     */
+    public function testWhenData_isValid_shouldOrderByDistanceInAscendingOrder()
+    {
+        $this->seed();
+        $route = $this->route([
+            'lat' => 51.58360411,
+            'long' => -2.30271250,
+            'rad' => 10,
+        ]);
+
+        $request = $this->getJson($route);
+
+        $this->assertEquals(
+            [
+                '106 The Barley Lea',
+                'George Street',
+                '95 Ingelow Road',
+                'Wone International Ltd',
+                'Greenstone Pub & Restaurant',
+                '1 Clifton Avenue',
+                'Best Western Rockingham Forest Hotel',
+                'Downhills Park Road',
+                '31 Hatfield Road',
+                '8 Highclere Road',
+            ],
+            Arr::pluck($request->json('data'), 'name')
+        );
+    }
+
+    /**
      * Returns an array of invalid radii with an expected error messages for when
      * they occur.
      *
@@ -164,6 +237,28 @@ class WithinRadiusControllerTest extends TestCase
             ['invalid-longitude', 'The long must be a number between -180 and 180.'],
             ['[]', 'The long must be a number between -180 and 180.'],
             ['1a', 'The long must be a number between -180 and 180.'],
+        ];
+    }
+
+    /**
+     * Returns an array of coordinates and radii, and an expected list of location
+     * names that should be returned by the controller.
+     *
+     * @link {https://www.distance.to/ To test out the calculations}
+     *
+     * @return array
+     */
+    public function validParamsAndExpectedResults(): array
+    {
+        return [
+            [51.47560393, -2.38071671, 1, ['Toyota Taunton']],
+            [
+                51.58360411, -2.30271250, 5, [
+                    '106 The Barley Lea',
+                    'George Street',
+                    '95 Ingelow Road',
+                ]
+            ],
         ];
     }
 
