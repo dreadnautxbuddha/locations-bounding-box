@@ -1,6 +1,5 @@
 # Overview
-A technical exam by [Peter Paul C. Cortez](mailto:innov.petercortez@gmail.com) for [Zap Map](https://www.zap-map.com/) whose main objective is to return a list of
-locations that fall within `n` kilometers of a coordinate. Find out more about the requirements [here](https://bitbucket.org/nextgreencar/zap-map-technical-interview-laravel/src/master/).
+This project returns a list of locations that fall within `n` kilometers of a coordinate.
 
 # Setup
 ## System Requirements
